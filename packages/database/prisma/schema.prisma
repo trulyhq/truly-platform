@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider      = "prisma-client-js"
+    output        = "../generated/client"
+    binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        String   @id @default(cuid())
+    email     String   @unique
+    username  String   @unique
+    password  String // Argon2id hash
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    refreshSessions RefreshSession[]
+
+    @@map("users")
+}
+
+model RefreshSession {
+    id        String   @id @default(cuid())
+    userId    String
+    token     String   @unique // Hashed refresh token
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@map("refresh_sessions")
+}

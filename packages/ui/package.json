@@ -1,0 +1,28 @@
+{
+  "name": "@truly/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./web": "./dist/web.js",
+    "./native": "./dist/native.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.74"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "@types/react": "~19.1.10",
+    "typescript": "^5.8.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@truly/auth",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "oslo": "^1.2.0",
+    "@truly/database": "*"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.8.0"
+  }
+}

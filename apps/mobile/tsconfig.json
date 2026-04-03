@@ -1,0 +1,7 @@
+{
+  "extends": "@truly/tsconfig/react-native.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["App.tsx", "App/**/*", "src/**/*", "nativewind-env.d.ts"]
+}

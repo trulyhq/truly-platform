@@ -1,0 +1,26 @@
+{
+  "name": "@truly/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "generated"
+  ],
+  "scripts": {
+    "build": "npm run prisma:generate && tsc",
+    "dev": "tsc --watch",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "prisma:generate": "prisma generate --schema ./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "prisma": "5.22.0",
+    "typescript": "^5.8.0"
+  }
+}

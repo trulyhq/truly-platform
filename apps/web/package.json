@@ -1,0 +1,25 @@
+{
+  "name": "@truly/web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@trpc/client": "^10.45.0",
+    "@truly/trpc": "*",
+    "@truly/ui": "*",
+    "next": "14.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "@types/node": "^20.17.47",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "typescript": "^5.8.0"
+  }
+}

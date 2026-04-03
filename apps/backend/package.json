@@ -1,0 +1,23 @@
+{
+  "name": "@truly/backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/handler.js",
+  "types": "dist/handler.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@trpc/server": "^10.45.0",
+    "@truly/trpc": "*"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "@types/aws-lambda": "^8.10.155",
+    "typescript": "^5.8.0"
+  }
+}

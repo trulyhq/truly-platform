@@ -1,0 +1,23 @@
+{
+  "name": "@truly/trpc",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "^3.879.0",
+    "@trpc/server": "^10.45.0",
+    "@truly/auth": "*",
+    "@truly/database": "*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@truly/tsconfig": "*",
+    "typescript": "^5.8.0"
+  }
+}

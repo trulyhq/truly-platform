@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.*
+!.env.example
+
+# build output
+dist/
+.next/
+.open-next/
+.expo/
+out/
+
+# SST
+.sst/
+.build/
+
+# turbo
+.turbo/
+
+# prisma
+packages/database/generated/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# debug
+npm-debug.log*
+yarn-error.log*
+
+# mobile
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+google-service-account.json
+
+# misc
+*.tsbuildinfo
+cdk.out/
