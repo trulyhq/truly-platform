@@ -7,6 +7,10 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:web": "npm run -w @truly/web dev",
+    "dev:landing": "npm run -w @truly/landing dev",
+    "dev:mobile": "npm run -w @truly/mobile dev",
+    "dev:backend": "npm run -w @truly/backend dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
