@@ -20,6 +20,11 @@
     "react": ">=18",
     "react-native": ">=0.74"
   },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@truly/tsconfig": "*",
     "@types/react": "~19.1.10",
