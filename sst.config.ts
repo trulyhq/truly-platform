@@ -93,9 +93,18 @@ export default {
         },
       });
 
+      const landing = new NextjsSite(stack, "landing", {
+        path: "apps/landing",
+        environment: {
+          NEXT_PUBLIC_APP_URL: web.url ?? "http://localhost:3000",
+          NEXT_PUBLIC_API_URL: api.url,
+        },
+      });
+
       stack.addOutputs({
         ApiEndpoint: api.url,
         WebUrl: web.url,
+        LandingUrl: landing.url,
         DatabaseEndpoint: db.dbInstanceEndpointAddress,
         DatabaseSecretArn: db.secret?.secretArn ?? "none",
       });
