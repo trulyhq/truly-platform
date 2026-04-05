@@ -35,8 +35,8 @@ export default function LandingPage() {
             <span className={styles.heroAccent}>truly yours.</span>
           </h1>
           <p className={styles.heroSub}>
-            A better way to connect, create, and grow. Built for people who want
-            more from their tools.
+            A better way to connect, create, and grow. Built for people who want more from their
+            tools.
           </p>
           <div className={styles.heroCtas}>
             <a href={`${APP_URL}/signup`} className={styles.ctaPrimary}>
@@ -74,9 +74,8 @@ export default function LandingPage() {
         <section id="about" className={styles.about}>
           <h2 className={styles.sectionTitle}>Built different.</h2>
           <p className={styles.aboutText}>
-            We believe tools should work for you — not the other way around.
-            Truly is built by a small, focused team that cares deeply about
-            craft and user experience.
+            We believe tools should work for you — not the other way around. Truly is built by a
+            small, focused team that cares deeply about craft and user experience.
           </p>
         </section>
 

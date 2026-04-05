@@ -4,6 +4,7 @@
     "slug": "truly-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "assetBundlePatterns": ["**/*"]
   }

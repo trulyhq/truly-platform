@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.next/
+.open-next/
+.expo/
+.sst/
+.build/
+.turbo/
+cdk.out/
+packages/database/generated/
+*.tsbuildinfo
+package-lock.json

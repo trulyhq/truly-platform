@@ -11,5 +11,14 @@
     "eu-west-1a",
     "eu-west-1b",
     "eu-west-1c"
-  ]
+  ],
+  "availability-zones:account=475309741762:region=eu-west-1": [
+    "eu-west-1a",
+    "eu-west-1b",
+    "eu-west-1c"
+  ],
+  "hosted-zone:account=475309741762:domainName=dev.mytruly.app:region=eu-west-1": {
+    "Id": "/hostedzone/Z07633252JP8LQEF8ZJZC",
+    "Name": "dev.mytruly.app."
+  }
 }

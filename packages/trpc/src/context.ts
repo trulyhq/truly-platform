@@ -101,9 +101,9 @@ async function getPrisma() {
   return prisma;
 }
 
-export async function createContext(
-  req?: { headers?: Record<string, string | undefined> }
-): Promise<Context> {
+export async function createContext(req?: {
+  headers?: Record<string, string | undefined>;
+}): Promise<Context> {
   const authToken = req?.headers?.["authorization"];
   return { prisma: await getPrisma(), authToken };
 }

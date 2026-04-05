@@ -14,6 +14,41 @@ export default {
   },
   stacks(app: SSTConfig["stacks"] extends (arg: infer A) => any ? A : never) {
     app.stack(function Stack({ stack }: StackContext) {
+      // ─── Stage-aware domain config ─────────────────────────────────
+      const stage = app.stage;
+      const knownStages = ["staging", "release", "prod", "hotfix"];
+      const isPersonalDev = !knownStages.includes(stage);
+
+      // Each AWS account has its own Route 53 hosted zone.
+      const hostedZone = isPersonalDev
+        ? "dev.mytruly.app"
+        : stage === "staging"
+          ? "staging.mytruly.app"
+          : stage === "release"
+            ? "release.mytruly.app"
+            : stage === "hotfix"
+              ? "hotfix.mytruly.app"
+              : "mytruly.app"; // prod stage
+
+      const apiDomain = isPersonalDev
+        ? `api.${stage}.dev.mytruly.app`
+        : stage === "prod"
+          ? "api.mytruly.app"
+          : `api.${stage}.mytruly.app`;
+
+      const webDomain = isPersonalDev
+        ? `go.${stage}.dev.mytruly.app`
+        : stage === "prod"
+          ? "go.mytruly.app"
+          : `go.${stage}.mytruly.app`;
+
+      const landingDomain = isPersonalDev
+        ? `${stage}.dev.mytruly.app`
+        : stage === "prod"
+          ? "mytruly.app"
+          : `${stage}.mytruly.app`;
+
+      // ─── Infrastructure ────────────────────────────────────────────
       const vpc = new ec2.Vpc(stack, "vpc", {
         maxAzs: 2,
         natGateways: 1,
@@ -28,10 +63,7 @@ export default {
         engine: rds.DatabaseInstanceEngine.postgres({
           version: rds.PostgresEngineVersion.of("15.16", "15"),
         }),
-        instanceType: ec2.InstanceType.of(
-          ec2.InstanceClass.T3,
-          ec2.InstanceSize.MICRO
-        ),
+        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
         vpc,
         vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
         allocatedStorage: 20,
@@ -48,6 +80,10 @@ export default {
       db.connections.allowDefaultPortFrom(apiSg);
 
       const api = new Api(stack, "api", {
+        customDomain: {
+          domainName: apiDomain,
+          hostedZone: hostedZone,
+        },
         routes: {
           "POST /trpc/{proxy+}": "apps/backend/src/handler.handler",
           "GET /trpc/{proxy+}": "apps/backend/src/handler.handler",
@@ -88,23 +124,31 @@ export default {
 
       const web = new NextjsSite(stack, "web", {
         path: "apps/web",
+        customDomain: {
+          domainName: webDomain,
+          hostedZone: hostedZone,
+        },
         environment: {
-          NEXT_PUBLIC_API_URL: api.url,
+          NEXT_PUBLIC_API_URL: api.customDomainUrl ?? api.url,
         },
       });
 
       const landing = new NextjsSite(stack, "landing", {
         path: "apps/landing",
+        customDomain: {
+          domainName: landingDomain,
+          hostedZone: hostedZone,
+        },
         environment: {
-          NEXT_PUBLIC_APP_URL: web.url ?? "http://localhost:3000",
-          NEXT_PUBLIC_API_URL: api.url,
+          NEXT_PUBLIC_APP_URL: web.customDomainUrl ?? web.url ?? "http://localhost:3000",
+          NEXT_PUBLIC_API_URL: api.customDomainUrl ?? api.url,
         },
       });
 
       stack.addOutputs({
-        ApiEndpoint: api.url,
-        WebUrl: web.url,
-        LandingUrl: landing.url,
+        ApiEndpoint: api.customDomainUrl ?? api.url,
+        WebUrl: web.customDomainUrl ?? web.url,
+        LandingUrl: landing.customDomainUrl ?? landing.url,
         DatabaseEndpoint: db.dbInstanceEndpointAddress,
         DatabaseSecretArn: db.secret?.secretArn ?? "none",
       });

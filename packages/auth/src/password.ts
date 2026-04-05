@@ -8,10 +8,7 @@ export async function hashPassword(password: string): Promise<string> {
   return encodeBase64(hash);
 }
 
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   const newHash = await hashPassword(password);
   return newHash === hash;
 }
