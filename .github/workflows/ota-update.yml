@@ -1,0 +1,48 @@
+# .github/workflows/ota-update.yml
+# Manually triggered OTA update for JS-only changes (no native rebuild).
+# Pushes updates via EAS Update to a specific channel.
+name: OTA Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "EAS Update channel"
+        required: true
+        type: choice
+        options:
+          - staging
+          - release
+          - production
+          - hotfix
+      message:
+        description: "Update message"
+        required: true
+        type: string
+
+jobs:
+  update:
+    name: Publish OTA Update
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Publish OTA update
+        working-directory: apps/mobile
+        run: |
+          eas update \
+            --branch ${{ inputs.channel }} \
+            --message "${{ inputs.message }}" \
+            --non-interactive

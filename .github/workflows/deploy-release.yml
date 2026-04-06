@@ -1,0 +1,91 @@
+# .github/workflows/deploy-release.yml
+# Deploys API + Web + Landing to RELEASE on push to release branch.
+# Account: Staging (215310597349) | SST stage: release
+name: Deploy Release
+
+on:
+  push:
+    branches: [release]
+    paths:
+      - "apps/backend/**"
+      - "apps/web/**"
+      - "apps/landing/**"
+      - "packages/**"
+      - "sst.config.ts"
+      - "package.json"
+      - "package-lock.json"
+
+concurrency:
+  group: deploy-release
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Release
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Build all packages
+        run: npx turbo run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Deploy SST (release)
+        id: deploy
+        run: npx sst deploy --stage release
+
+      - name: Tail migration Lambda logs (on failure)
+        if: failure() && steps.deploy.outcome == 'failure'
+        run: |
+          echo "🔍 Fetching recent migration Lambda logs from CloudWatch..."
+          LOG_GROUP=$(aws logs describe-log-groups \
+            --log-group-name-prefix "/aws/lambda/release-truly-platform" \
+            --query "logGroups[?contains(logGroupName, 'db-migrate')].logGroupName" \
+            --output text 2>/dev/null || true)
+          if [ -n "$LOG_GROUP" ]; then
+            echo "📋 Log group: $LOG_GROUP"
+            aws logs tail "$LOG_GROUP" --since 10m --format short 2>/dev/null || echo "Could not fetch logs"
+          else
+            echo "⚠️ Migration log group not found (may not exist yet)"
+          fi
+
+      - name: Set DATABASE_URL secret
+        if: success()
+        run: bash scripts/set-dburl.sh
+        env:
+          SST_STAGE: release
+          AWS_REGION: eu-west-1
+
+      - name: Health check
+        if: success()
+        run: |
+          echo "Waiting 15s for deployment to stabilize..."
+          sleep 15
+          for i in 1 2 3; do
+            STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://api.release.mytruly.app/health || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ Health check failed after 3 attempts (last: HTTP $STATUS)"
+          exit 1

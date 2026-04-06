@@ -11,14 +11,20 @@
   "scripts": {
     "build": "npm run prisma:generate && tsc",
     "dev": "tsc --watch",
+    "typecheck": "npm run prisma:generate && tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "migrate:deploy": "prisma migrate deploy --schema ./prisma/schema.prisma",
+    "migrate:status": "prisma migrate status --schema ./prisma/schema.prisma",
     "prisma:generate": "prisma generate --schema ./prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "5.22.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "@aws-sdk/client-ssm": "^3.0.0",
     "@truly/tsconfig": "*",
     "prisma": "5.22.0",
     "typescript": "^5.8.0"

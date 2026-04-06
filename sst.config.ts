@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Api, Config, NextjsSite, StackContext } from "sst/constructs";
+import { Api, Config, NextjsSite, Script, StackContext } from "sst/constructs";
 import type { SSTConfig } from "sst";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -142,6 +142,56 @@ export default {
         environment: {
           NEXT_PUBLIC_APP_URL: web.customDomainUrl ?? web.url ?? "http://localhost:3000",
           NEXT_PUBLIC_API_URL: api.customDomainUrl ?? api.url,
+        },
+      });
+
+      // ─── Database Migrations ─────────────────────────────────────────
+      // Runs `prisma migrate deploy` inside the VPC after every SST deploy.
+      // The Lambda has direct access to RDS — no bastion needed.
+      new Script(stack, "db-migrate", {
+        onCreate: "packages/database/src/migrate.handler",
+        onUpdate: "packages/database/src/migrate.handler",
+        defaults: {
+          function: {
+            enableLiveDev: false,
+            runtime: "nodejs20.x",
+            timeout: 300,
+            memorySize: 1024,
+            vpc,
+            vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+            securityGroups: [apiSg],
+            bind: [dbUrl],
+            environment: {
+              DB_SECRET_ARN: db.secret?.secretArn ?? "",
+            },
+            permissions: [
+              new iam.PolicyStatement({
+                actions: ["ssm:GetParameter", "kms:Decrypt"],
+                resources: ["*"],
+              }),
+              new iam.PolicyStatement({
+                actions: ["secretsmanager:GetSecretValue"],
+                resources: [db.secret?.secretArn ?? "*"],
+              }),
+            ],
+            copyFiles: [
+              {
+                from: "packages/database/generated/client",
+                to: "generated/client",
+              },
+              {
+                from: "packages/database/prisma",
+                to: "prisma",
+              },
+            ],
+            nodejs: {
+              format: "cjs",
+              esbuild: {
+                target: "node20",
+              },
+              install: ["@prisma/client", "prisma"],
+            },
+          },
         },
       });
 
