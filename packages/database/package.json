@@ -11,7 +11,7 @@
   "scripts": {
     "build": "npm run prisma:generate && tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run prisma:generate && tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
