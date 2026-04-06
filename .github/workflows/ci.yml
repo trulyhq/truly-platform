@@ -1,0 +1,39 @@
+# .github/workflows/ci.yml
+# Runs on every PR targeting main, release, or prod.
+# Checks: formatting, linting, type-checking (and tests when added).
+name: CI
+
+on:
+  pull_request:
+    branches: [main, release, prod]
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, Typecheck & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      # Prisma generate (needed for typecheck of database package)
+      - name: Generate Prisma client
+        run: npx turbo run build --filter=@truly/database
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npx turbo run lint
+
+      - name: Typecheck
+        run: npx turbo run typecheck

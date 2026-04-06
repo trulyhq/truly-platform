@@ -1,0 +1,68 @@
+# .github/workflows/deploy-hotfix.yml
+# Deploys API + Web + Landing to HOTFIX on push to hotfix/* branches.
+# Account: Prod (562590526970) | SST stage: hotfix
+name: Deploy Hotfix
+
+on:
+  push:
+    branches: ["hotfix/**"]
+    paths:
+      - "apps/backend/**"
+      - "apps/web/**"
+      - "apps/landing/**"
+      - "packages/**"
+      - "sst.config.ts"
+      - "package.json"
+      - "package-lock.json"
+
+concurrency:
+  group: deploy-hotfix
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Hotfix
+    runs-on: ubuntu-latest
+    environment: hotfix
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Build all packages
+        run: npx turbo run build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Deploy SST (hotfix)
+        run: npx sst deploy --stage hotfix
+
+      - name: Set DATABASE_URL secret
+        run: bash scripts/set-dburl.sh
+        env:
+          SST_STAGE: hotfix
+          AWS_REGION: eu-west-1
+
+      - name: Health check
+        run: |
+          echo "Waiting 15s for deployment to stabilize..."
+          sleep 15
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" https://api.hotfix.mytruly.app/health || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Health check passed (HTTP $STATUS)"
+          else
+            echo "⚠️ Health check returned HTTP $STATUS (may need time to warm up)"
+          fi

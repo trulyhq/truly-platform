@@ -1,0 +1,41 @@
+# .github/workflows/deploy-mobile-staging.yml
+# Builds mobile app for STAGING (internal testing) on push to main.
+# Uses EAS Build with "preview" profile → Internal TestFlight / Play internal track.
+name: Deploy Mobile (Staging)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/ui/**"
+      - "packages/trpc/**"
+      - "packages/validators/**"
+
+concurrency:
+  group: deploy-mobile-staging
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Build (Staging)
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Build for staging (internal)
+        working-directory: apps/mobile
+        run: eas build --profile preview --platform all --non-interactive
