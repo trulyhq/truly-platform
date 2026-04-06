@@ -25,10 +25,6 @@ jobs:
 
       - run: npm ci
 
-      # Prisma generate (needed for typecheck of database package)
-      - name: Generate Prisma client
-        run: npx turbo run build --filter=@truly/database
-
       - name: Check formatting
         run: npm run format:check
 
