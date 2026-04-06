@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ─── Require both SST_STAGE and AWS_PROFILE ───────────────────────────────────
-MISSING=()
-[[ -z "${SST_STAGE:-}" ]] && MISSING+=("SST_STAGE")
-[[ -z "${AWS_PROFILE:-}" ]] && MISSING+=("AWS_PROFILE")
-
-if [[ ${#MISSING[@]} -gt 0 ]]; then
-  echo "❌ Missing required env vars: ${MISSING[*]}" >&2
+# ─── Require SST_STAGE; AWS_PROFILE is optional in CI (OIDC provides creds) ──
+if [[ -z "${SST_STAGE:-}" ]]; then
+  echo "❌ Missing required env var: SST_STAGE" >&2
   echo "" >&2
-  echo "Set both before running:" >&2
-  echo "" >&2
+  echo "Usage:" >&2
   echo "  export SST_STAGE=da                # your stage name" >&2
-  echo "  export AWS_PROFILE=truly_dev       # AWS SSO profile" >&2
+  echo "  export AWS_PROFILE=truly_dev       # AWS SSO profile (local only)" >&2
   echo "" >&2
-  echo "Profiles:" >&2
+  echo "Profiles (local dev):" >&2
   echo "  truly_dev      → Dev account (475309741762)" >&2
   echo "  truly_staging  → Staging account (215310597349)" >&2
   echo "  truly_prod     → Prod account (562590526970)" >&2
@@ -28,7 +23,7 @@ REGION="${AWS_REGION:-eu-west-1}"
 PREFIX="${STAGE}trulyplatformStackdb"
 
 echo "🔐 Stage:   $STAGE"
-echo "☁️  Profile: $AWS_PROFILE"
+echo "☁️  Profile: ${AWS_PROFILE:-<CI/OIDC>}"
 echo "🌍 Region:  $REGION"
 echo ""
 

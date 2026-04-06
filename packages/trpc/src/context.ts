@@ -9,44 +9,7 @@ export type Context = {
 let prisma: PrismaClient | undefined;
 let cachedDatabaseUrl: string | undefined;
 let loadingDatabaseUrl: Promise<string | undefined> | undefined;
-let schemaReadyPromise: Promise<void> | undefined;
 const ssm = new SSMClient({});
-
-async function ensureAuthSchema(prismaClient: PrismaClient): Promise<void> {
-  if (schemaReadyPromise) return schemaReadyPromise;
-
-  schemaReadyPromise = (async () => {
-    await prismaClient.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "users" (
-        "id" TEXT PRIMARY KEY,
-        "email" TEXT NOT NULL UNIQUE,
-        "username" TEXT NOT NULL UNIQUE,
-        "password" TEXT NOT NULL,
-        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-
-    await prismaClient.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "refresh_sessions" (
-        "id" TEXT PRIMARY KEY,
-        "userId" TEXT NOT NULL,
-        "token" TEXT NOT NULL UNIQUE,
-        "expiresAt" TIMESTAMPTZ NOT NULL,
-        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        CONSTRAINT "refresh_sessions_userId_fkey"
-          FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
-      );
-    `);
-
-    await prismaClient.$executeRawUnsafe(`
-      CREATE INDEX IF NOT EXISTS "refresh_sessions_userId_idx"
-      ON "refresh_sessions" ("userId");
-    `);
-  })();
-
-  await schemaReadyPromise;
-}
 
 async function getDatabaseUrl(): Promise<string | undefined> {
   if (cachedDatabaseUrl) return cachedDatabaseUrl;
@@ -97,7 +60,6 @@ async function getPrisma() {
   if (!url) return undefined;
 
   if (!prisma) prisma = new PrismaClient();
-  await ensureAuthSchema(prisma);
   return prisma;
 }
 
