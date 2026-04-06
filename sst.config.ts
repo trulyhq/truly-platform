@@ -87,7 +87,18 @@ export default {
         routes: {
           "POST /trpc/{proxy+}": "apps/backend/src/handler.handler",
           "GET /trpc/{proxy+}": "apps/backend/src/handler.handler",
-          "GET /health": "apps/backend/src/health.handler",
+          "GET /health": {
+            function: {
+              handler: "apps/backend/src/health.handler",
+              bind: [],
+              permissions: [],
+              copyFiles: [],
+              nodejs: {
+                format: "cjs",
+                esbuild: { target: "node20" },
+              },
+            },
+          },
         },
         defaults: {
           function: {
