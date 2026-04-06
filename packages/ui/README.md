@@ -15,11 +15,7 @@ import { Button, Input } from "@truly/ui";
 export function LoginForm() {
   return (
     <>
-      <Input
-        label="Email"
-        placeholder="you@example.com"
-        keyboardType="email-address"
-      />
+      <Input label="Email" placeholder="you@example.com" keyboardType="email-address" />
       <Input label="Password" placeholder="••••••••" secureTextEntry />
       <Button label="Sign in" />
     </>

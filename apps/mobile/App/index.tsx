@@ -24,8 +24,7 @@ export default function App() {
       const response = await trpc.auth.login.mutate({ email, password });
       setResult({ user: response.user, accessToken: response.accessToken });
     } catch (loginError: unknown) {
-      const message =
-        loginError instanceof Error ? loginError.message : "Login failed";
+      const message = loginError instanceof Error ? loginError.message : "Login failed";
       setError(message);
       setResult(null);
     } finally {
@@ -39,9 +38,7 @@ export default function App() {
         <Text style={{ fontSize: 24, fontWeight: "700", color: "#0f172a" }}>
           Truly Mobile Login
         </Text>
-        <Text style={{ color: "#64748b" }}>
-          Uses EXPO_PUBLIC_API_URL or deployed API fallback.
-        </Text>
+        <Text style={{ color: "#64748b" }}>Uses EXPO_PUBLIC_API_URL or deployed API fallback.</Text>
 
         <Input
           label="Email"

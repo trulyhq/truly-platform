@@ -33,10 +33,7 @@ export async function validateRefreshToken(
   return { userId: session.userId };
 }
 
-export async function revokeRefreshToken(
-  prisma: PrismaClient,
-  token: string
-): Promise<void> {
+export async function revokeRefreshToken(prisma: PrismaClient, token: string): Promise<void> {
   const hashedToken = await hashToken(token);
   await prisma.refreshSession.deleteMany({ where: { token: hashedToken } });
 }

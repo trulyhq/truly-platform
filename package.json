@@ -11,18 +11,39 @@
     "dev:landing": "npm run -w @truly/landing dev",
     "dev:mobile": "npm run -w @truly/mobile dev",
     "dev:backend": "npm run -w @truly/backend dev",
+    "db:push": "npm run -w @truly/database db:push",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "aws:login": "bash ./scripts/aws-login.sh",
     "sst:dev": "sst dev",
-    "sst:deploy": "sst deploy",
-    "dev:deploy": "turbo run build && sst dev",
-    "secrets:set-dburl": "bash ./scripts/set-dburl.sh"
+    "deploy": "sst deploy",
+    "dev:deploy": "npm run build && npm run sst:dev",
+    "secrets:set-dburl": "bash ./scripts/set-dburl.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix --no-error-on-unmatched-pattern"
+    ],
+    "*.{json,md,mdx,css,mjs}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
     "aws-cdk-lib": "2.224.0",
     "constructs": "10.3.0",
     "dotenv": "^16.4.5",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "react": "18.3.1",
     "sst": "^2.43.4",
     "turbo": "^2.8.19"

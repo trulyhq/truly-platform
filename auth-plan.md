@@ -33,6 +33,7 @@ model RefreshSession {
 ## 2. Token Manager (`packages/auth/src/tokens.ts`)
 
 Core responsibilities:
+
 - `createAccessToken(userId, claims)`: issue short-lived Bearer token (e.g. 10-15 min)
 - `verifyAccessToken(token)`: validate signature, expiry, and claims
 - `createRefreshToken(userId)`: create opaque token, hash before storing in DB
@@ -43,12 +44,14 @@ Core responsibilities:
 ## 3. Password Manager (`packages/auth/src/password.ts`)
 
 Use Argon2id:
+
 - `hashPassword(plain)`
 - `verifyPassword(hash, plain)`
 
 ## 4. Cookie Handler (`packages/auth/src/cookies.ts`)
 
 Refresh token cookie only:
+
 - `HttpOnly`
 - `Secure` (production)
 - `SameSite=Lax`
