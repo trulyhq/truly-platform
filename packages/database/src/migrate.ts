@@ -30,7 +30,7 @@ export async function handler() {
     },
     cwd: process.cwd(),
     stdio: "pipe" as const,
-    timeout: 60_000,
+    timeout: 240_000,
   };
 
   try {

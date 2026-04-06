@@ -155,7 +155,7 @@ export default {
           function: {
             enableLiveDev: false,
             runtime: "nodejs20.x",
-            timeout: 120,
+            timeout: 300,
             memorySize: 1024,
             vpc,
             vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
