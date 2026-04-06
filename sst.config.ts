@@ -126,8 +126,8 @@ export default {
               format: "cjs",
               esbuild: {
                 target: "node20",
+                external: ["@prisma/client"],
               },
-              install: ["@prisma/client", "prisma"],
             },
           },
         },
@@ -199,8 +199,9 @@ export default {
               format: "cjs",
               esbuild: {
                 target: "node20",
+                external: ["@prisma/client"],
               },
-              install: ["@prisma/client", "prisma"],
+              install: ["prisma"],
             },
           },
         },
