@@ -33,9 +33,14 @@ export async function handler() {
     timeout: 240_000,
   };
 
+  // Use the prisma CLI directly via node instead of npx.
+  // npx resolves through node_modules/.bin/ symlinks which causes __dirname
+  // to point to .bin/ instead of prisma/build/, breaking WASM file resolution.
+  const prismaCmd = "node node_modules/prisma/build/index.js";
+
   try {
     // Check current migration status first
-    const statusOutput = execSync("npx prisma migrate status --schema ./prisma/schema.prisma", {
+    const statusOutput = execSync(`${prismaCmd} migrate status --schema ./prisma/schema.prisma`, {
       ...execOpts,
       stdio: "pipe",
     });
@@ -48,7 +53,7 @@ export async function handler() {
       console.log("🔧 Baselining initial migration (tables already exist)...");
       try {
         execSync(
-          "npx prisma migrate resolve --applied 0001_initial --schema ./prisma/schema.prisma",
+          `${prismaCmd} migrate resolve --applied 0001_initial --schema ./prisma/schema.prisma`,
           execOpts
         );
         console.log("✅ Baseline applied for 0001_initial");
@@ -68,7 +73,10 @@ export async function handler() {
   }
 
   try {
-    const output = execSync("npx prisma migrate deploy --schema ./prisma/schema.prisma", execOpts);
+    const output = execSync(
+      `${prismaCmd} migrate deploy --schema ./prisma/schema.prisma`,
+      execOpts
+    );
 
     const stdout = output.toString();
     console.log(stdout);
