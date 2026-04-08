@@ -1,4 +1,6 @@
 import { execSync } from "child_process";
+import path from "path";
+import fs from "fs";
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
@@ -23,6 +25,13 @@ export async function handler() {
 
   console.log("🔄 Running prisma migrate deploy...");
 
+  // Resolve the prisma CLI entry point. We invoke it with `node` directly
+  // instead of `npx` because npx resolves through node_modules/.bin/ symlinks
+  // which causes __dirname to point to .bin/ instead of prisma/build/.
+  // This breaks the WASM file (prisma_schema_build_bg.wasm) resolution at runtime.
+  const prismaCliPath = resolvePrismaCli();
+  console.log(`📍 Using prisma CLI at: ${prismaCliPath}`);
+
   const execOpts = {
     env: {
       ...process.env,
@@ -33,17 +42,12 @@ export async function handler() {
     timeout: 240_000,
   };
 
-  // Use the prisma CLI directly via node instead of npx.
-  // npx resolves through node_modules/.bin/ symlinks which causes __dirname
-  // to point to .bin/ instead of prisma/build/, breaking WASM file resolution.
-  const prismaCmd = "node node_modules/prisma/build/index.js";
-
   try {
     // Check current migration status first
-    const statusOutput = execSync(`${prismaCmd} migrate status --schema ./prisma/schema.prisma`, {
-      ...execOpts,
-      stdio: "pipe",
-    });
+    const statusOutput = execSync(
+      `node "${prismaCliPath}" migrate status --schema ./prisma/schema.prisma`,
+      { ...execOpts, stdio: "pipe" }
+    );
     const statusText = statusOutput.toString();
     console.log("📋 Migration status:\n", statusText);
 
@@ -53,7 +57,7 @@ export async function handler() {
       console.log("🔧 Baselining initial migration (tables already exist)...");
       try {
         execSync(
-          `${prismaCmd} migrate resolve --applied 0001_initial --schema ./prisma/schema.prisma`,
+          `node "${prismaCliPath}" migrate resolve --applied 0001_initial --schema ./prisma/schema.prisma`,
           execOpts
         );
         console.log("✅ Baseline applied for 0001_initial");
@@ -74,7 +78,7 @@ export async function handler() {
 
   try {
     const output = execSync(
-      `${prismaCmd} migrate deploy --schema ./prisma/schema.prisma`,
+      `node "${prismaCliPath}" migrate deploy --schema ./prisma/schema.prisma`,
       execOpts
     );
 
@@ -93,6 +97,55 @@ export async function handler() {
 
     throw new Error(`Migration failed: ${stderr}`);
   }
+}
+
+/**
+ * Resolve the prisma CLI entry point (build/index.js inside the prisma package).
+ *
+ * We try multiple candidate paths because SST may place node_modules in different
+ * locations depending on the bundling configuration. This is more robust than
+ * hardcoding a single path.
+ */
+function resolvePrismaCli(): string {
+  const cwd = process.cwd();
+
+  const candidates = [
+    // SST installs packages in the Lambda output dir's node_modules
+    path.join(cwd, "node_modules", "prisma", "build", "index.js"),
+    // Fallback: try relative to this file's location
+    path.join(__dirname, "..", "node_modules", "prisma", "build", "index.js"),
+    path.join(__dirname, "node_modules", "prisma", "build", "index.js"),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Last resort: log diagnostics and throw
+  console.error("❌ Could not find prisma CLI. Diagnostics:");
+  console.error(`   cwd: ${cwd}`);
+  console.error(`   __dirname: ${__dirname}`);
+  try {
+    console.error(`   cwd contents: ${fs.readdirSync(cwd).join(", ")}`);
+    const nm = path.join(cwd, "node_modules");
+    if (fs.existsSync(nm)) {
+      console.error(`   node_modules contents: ${fs.readdirSync(nm).join(", ")}`);
+      const prismaDir = path.join(nm, "prisma");
+      if (fs.existsSync(prismaDir)) {
+        console.error(`   prisma/ contents: ${fs.readdirSync(prismaDir).join(", ")}`);
+        const buildDir = path.join(prismaDir, "build");
+        if (fs.existsSync(buildDir)) {
+          console.error(`   prisma/build/ contents: ${fs.readdirSync(buildDir).join(", ")}`);
+        }
+      }
+    }
+  } catch (e) {
+    console.error(`   Error listing dirs: ${e}`);
+  }
+
+  throw new Error(`prisma CLI not found. Searched: ${candidates.join(", ")}`);
 }
 
 // ─── DATABASE_URL resolution ─────────────────────────────────────────────────
