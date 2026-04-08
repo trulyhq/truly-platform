@@ -201,7 +201,7 @@ export default {
                 target: "node20",
                 external: ["@prisma/client"],
               },
-              install: ["prisma"],
+              install: ["prisma@5.22.0"],
             },
           },
         },
