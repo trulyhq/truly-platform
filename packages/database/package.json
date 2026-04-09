@@ -20,13 +20,13 @@
     "prisma:generate": "prisma generate --schema ./prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "5.22.0"
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0"
   },
   "devDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.0.0",
     "@aws-sdk/client-ssm": "^3.0.0",
     "@truly/tsconfig": "*",
-    "prisma": "5.22.0",
     "typescript": "^5.8.0"
   }
 }
