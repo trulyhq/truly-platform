@@ -28,6 +28,8 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     environment: production
+    env:
+      PRISMA_CLI_BINARY_TARGETS: native,rhel-openssl-3.0.x
     steps:
       - uses: actions/checkout@v4
 

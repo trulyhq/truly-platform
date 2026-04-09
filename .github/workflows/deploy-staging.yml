@@ -28,6 +28,8 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      PRISMA_CLI_BINARY_TARGETS: native,rhel-openssl-3.0.x
     steps:
       - uses: actions/checkout@v4
 
