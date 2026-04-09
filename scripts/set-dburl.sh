@@ -18,8 +18,7 @@ fi
 
 STAGE="$SST_STAGE"
 REGION="${AWS_REGION:-eu-west-1}"
-# CloudFormation truncates logical IDs, so the secret name prefix varies.
-# Use a broader pattern: <stage>trulyplatformStackdb
+STACK_NAME="${STAGE}-truly-platform-Stack"
 PREFIX="${STAGE}trulyplatformStackdb"
 
 echo "🔐 Stage:   $STAGE"
@@ -27,22 +26,40 @@ echo "☁️  Profile: ${AWS_PROFILE:-<CI/OIDC>}"
 echo "🌍 Region:  $REGION"
 echo ""
 
-LIST_JSON="$(aws secretsmanager list-secrets --region "$REGION" --output json)"
+SECRET_ID="$(aws cloudformation describe-stacks \
+  --stack-name "$STACK_NAME" \
+  --region "$REGION" \
+  --query "Stacks[0].Outputs[?OutputKey=='DatabaseSecretArn'].OutputValue" \
+  --output text 2>/dev/null || true)"
 
-SECRET_ID="$(
-  node -e '
-    const d = JSON.parse(process.argv[1]);
-    const prefix = process.argv[2];
-    const matches = (d.SecretList || [])
-      .filter(s => s?.Name && s.Name.startsWith(prefix))
-      .sort((a, b) => new Date(a.CreatedDate) - new Date(b.CreatedDate));
-    if (!matches.length) process.exit(2);
-    process.stdout.write(matches[matches.length - 1].Name);
-  ' "$LIST_JSON" "$PREFIX"
-)" || {
-  echo "No DB secret found for stage: $STAGE (prefix: $PREFIX)" >&2
-  exit 1
-}
+if [[ -z "$SECRET_ID" || "$SECRET_ID" == "None" || "$SECRET_ID" == "none" ]]; then
+  echo "ℹ️  Stack output lookup unavailable. Falling back to prefix search..." >&2
+
+  LIST_JSON="$(aws secretsmanager list-secrets --region "$REGION" --output json 2>/dev/null || true)"
+
+  SECRET_ID="$(
+    node -e '
+      const raw = process.argv[1];
+      if (!raw) process.exit(2);
+      const d = JSON.parse(raw);
+      const prefix = process.argv[2];
+      const matches = (d.SecretList || [])
+        .filter((s) => s?.Name && s.Name.startsWith(prefix))
+        .sort((a, b) => new Date(a.CreatedDate) - new Date(b.CreatedDate));
+      if (!matches.length) process.exit(2);
+      process.stdout.write(matches[matches.length - 1].Name);
+    ' "$LIST_JSON" "$PREFIX"
+  )" || true
+
+  if [[ -z "$SECRET_ID" || "$SECRET_ID" == "None" || "$SECRET_ID" == "none" ]]; then
+    echo "❌ Could not resolve DB secret by stack output or prefix fallback." >&2
+    echo "   Stack:  $STACK_NAME" >&2
+    echo "   Prefix: $PREFIX" >&2
+    echo "   Region: $REGION" >&2
+    echo "   Required permissions: cloudformation:DescribeStacks and/or secretsmanager:ListSecrets" >&2
+    exit 1
+  fi
+fi
 
 RDS_JSON="$(aws secretsmanager get-secret-value \
   --secret-id "$SECRET_ID" \
