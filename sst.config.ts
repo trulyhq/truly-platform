@@ -194,6 +194,14 @@ export default {
                 from: "packages/database/prisma",
                 to: "prisma",
               },
+              {
+                from: "node_modules/prisma",
+                to: "node_modules/prisma",
+              },
+              {
+                from: "node_modules/@prisma",
+                to: "node_modules/@prisma",
+              },
             ],
             nodejs: {
               format: "cjs",
@@ -201,7 +209,6 @@ export default {
                 target: "node20",
                 external: ["@prisma/client"],
               },
-              install: ["prisma"],
             },
           },
         },
