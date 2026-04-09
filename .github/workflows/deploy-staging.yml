@@ -40,6 +40,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Ensure Prisma Lambda engine binaries
+        run: PRISMA_CLI_BINARY_TARGETS=rhel-openssl-3.0.x node -e "const { ensureBinariesExist } = require('@prisma/engines'); ensureBinariesExist().catch((e) => { console.error(e); process.exit(1); });"
+
       - name: Build all packages
         run: npx turbo run build
 

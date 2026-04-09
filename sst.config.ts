@@ -157,7 +157,7 @@ export default {
       });
 
       // ─── Database Migrations ─────────────────────────────────────────
-      // Runs `prisma migrate deploy` inside the VPC after each SST deploy.
+      // Runs `prisma migrate deploy` inside the VPC after each infrastructure deploy.
       // The Lambda has direct access to RDS — no bastion needed.
       new Script(stack, "db-migrate", {
         onCreate: "packages/database/src/migrate.handler",
