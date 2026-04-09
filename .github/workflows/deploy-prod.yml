@@ -72,13 +72,6 @@ jobs:
             echo "⚠️ Migration log group not found (may not exist yet)"
           fi
 
-      - name: Set DATABASE_URL secret
-        if: success()
-        run: bash scripts/set-dburl.sh
-        env:
-          SST_STAGE: prod
-          AWS_REGION: eu-west-1
-
       - name: Health check
         if: success()
         run: |
