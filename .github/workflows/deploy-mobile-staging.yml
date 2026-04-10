@@ -33,6 +33,17 @@ jobs:
             exit 1
           fi
 
+      - name: Validate EAS project is initialized
+        working-directory: apps/mobile
+        run: |
+          PROJECT_ID=$(node -e "const fs=require('fs');const app=JSON.parse(fs.readFileSync('app.json','utf8'));process.stdout.write(app?.expo?.extra?.eas?.projectId||'');")
+          if [ -z "$PROJECT_ID" ]; then
+            echo "❌ EAS project is not initialized for apps/mobile"
+            echo "   Run once locally: cd apps/mobile && npx eas-cli init"
+            echo "   Then commit app.json (with expo.extra.eas.projectId) and eas.json"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -49,4 +60,4 @@ jobs:
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --profile preview --platform all --non-interactive
+        run: eas build --profile staging --platform all --non-interactive
