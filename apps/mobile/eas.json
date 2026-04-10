@@ -1,0 +1,16 @@
+{
+  "build": {
+    "staging": {
+      "distribution": "internal",
+      "env": {
+        "ENVIRONMENT": "staging"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "env": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}

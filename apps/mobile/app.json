@@ -6,6 +6,12 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "assetBundlePatterns": ["**/*"]
+    "assetBundlePatterns": ["**/*"],
+    "extra": {
+      "eas": {
+        "projectId": "8519e47e-c945-40e1-b857-f0c77b371c55"
+      }
+    },
+    "owner": "trulyhq"
   }
 }
