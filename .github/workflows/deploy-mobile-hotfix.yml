@@ -1,0 +1,41 @@
+# .github/workflows/deploy-mobile-hotfix.yml
+# Builds mobile app for HOTFIX (fast-track internal) on push to hotfix/* branches.
+# Uses EAS Build with "hotfix" profile → Internal TestFlight / Play internal track.
+name: Deploy Mobile (Hotfix)
+
+on:
+  push:
+    branches: ["hotfix/**"]
+    paths:
+      - "apps/mobile/**"
+      - "packages/ui/**"
+      - "packages/trpc/**"
+      - "packages/validators/**"
+
+concurrency:
+  group: deploy-mobile-hotfix
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: EAS Build (Hotfix)
+    runs-on: ubuntu-latest
+    environment: hotfix
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Build hotfix (internal)
+        working-directory: apps/mobile
+        run: eas build --profile hotfix --platform all --non-interactive

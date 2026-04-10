@@ -1,0 +1,46 @@
+# .github/workflows/deploy-mobile-prod.yml
+# Builds mobile app for PRODUCTION on push to prod branch.
+# Uses EAS Build with "production" profile + auto-submit to App Store / Play Store.
+name: Deploy Mobile (Production)
+
+on:
+  push:
+    branches: [prod]
+    paths:
+      - "apps/mobile/**"
+      - "packages/ui/**"
+      - "packages/trpc/**"
+      - "packages/validators/**"
+
+concurrency:
+  group: deploy-mobile-prod
+  cancel-in-progress: false
+
+jobs:
+  build-and-submit:
+    name: EAS Build + Submit (Production)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      # Decode Google Play service account key from secret
+      - name: Setup Google Play credentials
+        if: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY != '' }}
+        run: echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" | base64 -d > apps/mobile/google-service-account.json
+
+      - name: Build & submit to stores
+        working-directory: apps/mobile
+        run: eas build --profile production --platform all --non-interactive --auto-submit
