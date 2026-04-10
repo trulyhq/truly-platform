@@ -11,6 +11,7 @@ on:
       - "packages/ui/**"
       - "packages/trpc/**"
       - "packages/validators/**"
+  workflow_dispatch:
 
 concurrency:
   group: deploy-mobile-staging
@@ -23,6 +24,14 @@ jobs:
     environment: staging
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate EXPO_TOKEN is configured
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "❌ Missing EXPO_TOKEN secret in GitHub Environment: staging"
+            echo "   Go to: Settings → Environments → staging → Secrets"
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:
@@ -38,4 +47,6 @@ jobs:
 
       - name: Build for staging (internal)
         working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --profile preview --platform all --non-interactive
