@@ -17,7 +17,10 @@
       "package": "com.trulyhq.trulymobile.staging"
     },
     "ios": {
-      "bundleIdentifier": "com.trulyhq.trulymobile.staging"
+      "bundleIdentifier": "com.trulyhq.trulymobile.staging",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     }
   }
 }
