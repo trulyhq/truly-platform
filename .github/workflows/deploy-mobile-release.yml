@@ -1,0 +1,41 @@
+# .github/workflows/deploy-mobile-release.yml
+# Builds mobile app for RELEASE (external beta) on push to release branch.
+# Uses EAS Build with "release" profile → External TestFlight / Play closed beta.
+name: Deploy Mobile (Release)
+
+on:
+  push:
+    branches: [release]
+    paths:
+      - "apps/mobile/**"
+      - "packages/ui/**"
+      - "packages/trpc/**"
+      - "packages/validators/**"
+
+concurrency:
+  group: deploy-mobile-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: EAS Build (Release)
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Build for release (beta)
+        working-directory: apps/mobile
+        run: eas build --profile release --platform all --non-interactive

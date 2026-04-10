@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ─── Require both SST_STAGE and AWS_PROFILE ───────────────────────────────────
-MISSING=()
-[[ -z "${SST_STAGE:-}" ]] && MISSING+=("SST_STAGE")
-[[ -z "${AWS_PROFILE:-}" ]] && MISSING+=("AWS_PROFILE")
-
-if [[ ${#MISSING[@]} -gt 0 ]]; then
-  echo "❌ Missing required env vars: ${MISSING[*]}" >&2
+# ─── Require SST_STAGE; AWS_PROFILE is optional in CI (OIDC provides creds) ──
+if [[ -z "${SST_STAGE:-}" ]]; then
+  echo "❌ Missing required env var: SST_STAGE" >&2
   echo "" >&2
-  echo "Set both before running:" >&2
-  echo "" >&2
+  echo "Usage:" >&2
   echo "  export SST_STAGE=da                # your stage name" >&2
-  echo "  export AWS_PROFILE=truly_dev       # AWS SSO profile" >&2
+  echo "  export AWS_PROFILE=truly_dev       # AWS SSO profile (local only)" >&2
   echo "" >&2
-  echo "Profiles:" >&2
+  echo "Profiles (local dev):" >&2
   echo "  truly_dev      → Dev account (475309741762)" >&2
   echo "  truly_staging  → Staging account (215310597349)" >&2
   echo "  truly_prod     → Prod account (562590526970)" >&2
@@ -23,31 +18,48 @@ fi
 
 STAGE="$SST_STAGE"
 REGION="${AWS_REGION:-eu-west-1}"
-# CloudFormation truncates logical IDs, so the secret name prefix varies.
-# Use a broader pattern: <stage>trulyplatformStackdb
+STACK_NAME="${STAGE}-truly-platform-Stack"
 PREFIX="${STAGE}trulyplatformStackdb"
 
 echo "🔐 Stage:   $STAGE"
-echo "☁️  Profile: $AWS_PROFILE"
+echo "☁️  Profile: ${AWS_PROFILE:-<CI/OIDC>}"
 echo "🌍 Region:  $REGION"
 echo ""
 
-LIST_JSON="$(aws secretsmanager list-secrets --region "$REGION" --output json)"
+SECRET_ID="$(aws cloudformation describe-stacks \
+  --stack-name "$STACK_NAME" \
+  --region "$REGION" \
+  --query "Stacks[0].Outputs[?OutputKey=='DatabaseSecretArn'].OutputValue" \
+  --output text 2>/dev/null || true)"
 
-SECRET_ID="$(
-  node -e '
-    const d = JSON.parse(process.argv[1]);
-    const prefix = process.argv[2];
-    const matches = (d.SecretList || [])
-      .filter(s => s?.Name && s.Name.startsWith(prefix))
-      .sort((a, b) => new Date(a.CreatedDate) - new Date(b.CreatedDate));
-    if (!matches.length) process.exit(2);
-    process.stdout.write(matches[matches.length - 1].Name);
-  ' "$LIST_JSON" "$PREFIX"
-)" || {
-  echo "No DB secret found for stage: $STAGE (prefix: $PREFIX)" >&2
-  exit 1
-}
+if [[ -z "$SECRET_ID" || "$SECRET_ID" == "None" || "$SECRET_ID" == "none" ]]; then
+  echo "ℹ️  Stack output lookup unavailable. Falling back to prefix search..." >&2
+
+  LIST_JSON="$(aws secretsmanager list-secrets --region "$REGION" --output json 2>/dev/null || true)"
+
+  SECRET_ID="$(
+    node -e '
+      const raw = process.argv[1];
+      if (!raw) process.exit(2);
+      const d = JSON.parse(raw);
+      const prefix = process.argv[2];
+      const matches = (d.SecretList || [])
+        .filter((s) => s?.Name && s.Name.startsWith(prefix))
+        .sort((a, b) => new Date(a.CreatedDate) - new Date(b.CreatedDate));
+      if (!matches.length) process.exit(2);
+      process.stdout.write(matches[matches.length - 1].Name);
+    ' "$LIST_JSON" "$PREFIX"
+  )" || true
+
+  if [[ -z "$SECRET_ID" || "$SECRET_ID" == "None" || "$SECRET_ID" == "none" ]]; then
+    echo "❌ Could not resolve DB secret by stack output or prefix fallback." >&2
+    echo "   Stack:  $STACK_NAME" >&2
+    echo "   Prefix: $PREFIX" >&2
+    echo "   Region: $REGION" >&2
+    echo "   Required permissions: cloudformation:DescribeStacks and/or secretsmanager:ListSecrets" >&2
+    exit 1
+  fi
+fi
 
 RDS_JSON="$(aws secretsmanager get-secret-value \
   --secret-id "$SECRET_ID" \
