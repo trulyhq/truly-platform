@@ -33,3 +33,6 @@ jobs:
 
       - name: Typecheck
         run: npx turbo run typecheck
+
+      - name: Build all packages
+        run: npx turbo run build
