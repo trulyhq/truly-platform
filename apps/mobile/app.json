@@ -14,10 +14,10 @@
     },
     "owner": "trulyhq",
     "android": {
-      "package": "com.trulyhq.trulymobile.staging"
+      "package": "com.trulyhq.trulymobile"
     },
     "ios": {
-      "bundleIdentifier": "com.trulyhq.trulymobile.staging",
+      "bundleIdentifier": "com.trulyhq.trulymobile",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

@@ -5,6 +5,8 @@
   "main": "index.ts",
   "scripts": {
     "dev": "expo start",
+    "dev:staging": "APP_VARIANT=staging expo start",
+    "dev:production": "APP_VARIANT=production expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -27,6 +29,7 @@
     "@truly/tsconfig": "*",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
+    "eas-cli": "^18.5.0",
     "tailwindcss": "^3.4.10",
     "typescript": "~5.9.2"
   }

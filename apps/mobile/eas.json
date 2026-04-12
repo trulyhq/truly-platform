@@ -1,15 +1,20 @@
 {
+  "cli": {
+    "appVersionSource": "remote"
+  },
   "build": {
     "staging": {
       "distribution": "internal",
       "env": {
-        "ENVIRONMENT": "staging"
+        "ENVIRONMENT": "staging",
+        "APP_VARIANT": "staging"
       }
     },
     "production": {
       "distribution": "store",
       "env": {
-        "ENVIRONMENT": "production"
+        "ENVIRONMENT": "production",
+        "APP_VARIANT": "production"
       }
     }
   }
