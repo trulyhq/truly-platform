@@ -1,6 +1,6 @@
 # .github/workflows/deploy-mobile-staging.yml
 # Builds mobile app for STAGING (internal testing) on push to main.
-# Uses EAS Build with "preview" profile → Internal TestFlight / Play internal track.
+# Temporarily builds Android only while iOS credentials are being set up.
 name: Deploy Mobile (Staging)
 
 on:
@@ -60,4 +60,4 @@ jobs:
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --profile staging --platform all --non-interactive
+        run: eas build --profile staging --platform android --non-interactive
